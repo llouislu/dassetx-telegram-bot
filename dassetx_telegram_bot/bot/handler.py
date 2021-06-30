@@ -1,3 +1,5 @@
+from telegram.ext import CommandHandler
+
 from dassetx_telegram_bot.data_provider.dassetx_price_provider import (
     DassetxPriceProvider,
     DassetxPrice,
@@ -5,49 +7,73 @@ from dassetx_telegram_bot.data_provider.dassetx_price_provider import (
 
 
 class DassetxPriceAlertHandler:
-    def __init__(self):
-        self._price_provider = DassetxPriceProvider()
+    HELP = (
+        '⚠️ Please provide a crypto code and a price value: \n'
+        '<i>/alert &lt;crypto code&gt; operator &lt;price></i>\n'
+        'e.g. \n'
+        '   /alert btc > 50000\n'
+        '   /alert btc &lt; 40000\n'
+    )
+    PARSE_MODE = "html"
+
+    def __init__(self, dassetxPriceProvider: DassetxPriceProvider):
+        self._price_provider = dassetxPriceProvider
+
+    def start(self):
+        self._price_provider.start()
+
+    def build_handler(self, command: str):
+        return CommandHandler(command, getattr(self, f"{command}_command"))
 
     def start_command(self, update, context):
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text='Hello there! I\'m Dassetx bot NON-OFFICIAL.',
-        )
+        response = 'Hello there! I\'m Dassetx Price Alert Bot UNOFFICIAL.'
+        response += "\n"
+        response += self.HELP
+        self._send(update, context, response)
 
-    def price_alert(self, update, context):
+    def help_command(self, update, context):
+        self._send(update, context, self.HELP)
+
+    def alert_command(self, update, context):
         if len(context.args) < 2:
             # invalid arguments
             # print help
-            response = (
-                '⚠️ Please provide a crypto code and a price value: \n'
-                '<i>/price_alert {crypto code} {> / &lt;} {price}</i>'
-            )
-            context.bot.send_message(
-                chat_id=update.effective_chat.id, text=response
-            )
+            response = self.HELP
+            response += "\n"
+            self._send(update, context, response)
+
             return
 
         crypto = context.args[0].upper()
         sign = context.args[1]
-        price = context.args[2]
+        expected_price = context.args[2]
 
-        context.job_queue.run_repeating(
-            self._monitor_price,
-            interval=15,
-            first=15,
-            context=[crypto, sign, price, update.message.chat_id],
-        )
+        # context.job_queue.run_repeating(
+        #     self._monitor_price,
+        #     interval=15,
+        #     first=15,
+        #     context=[crypto, sign, price, update.message.chat_id],
+        # )
+
+        current_tick = self._price_provider.get(crypto)
+        if not current_tick:
+            response = f"Your crypto '{crypto}' doesn't exist."
+            self._send(update, context, response)
+            return
 
         response = (
-            f"⏳ I will send you a message when the price of {crypto}"
-            f"reaches ${price}, \n"
+            f"⏳ I will send you a message when the price of {crypto} "
+            f"reaches ${expected_price}, \n"
         )
-        response += (
-            f"the current price of {crypto} is NZ$"
-            # TODO: check if it's None if property 'lastTradeRate' not exists
-            f"{self._price_provider.get(crypto).lastTradeRate}"
+        response += f"the current price of {crypto} is ${current_tick.price}"
+        self._send(update, context, response)
+
+    def _send(self, update, context, text: str):
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=text,
+            parse_mode=self.PARSE_MODE,
         )
-        chat_id = update.effective_chat.id, text = response
 
     def _make_symbol(self, crypto: str, to="NZD"):
         return f"{crypto}-{to}"
