@@ -5,7 +5,7 @@ from telegram.ext import Updater
 from dassetx_telegram_bot.bot.handler import (
     DassetxPriceAlertHandler,
 )
-from dassetx_telegram_bot.config import Config
+from dassetx_telegram_bot.config import CONFIG
 from dassetx_telegram_bot.data_provider.dassetx_price_provider import (
     DassetxPriceProvider,
 )
@@ -15,29 +15,29 @@ logger.setLevel(logging.DEBUG)
 
 
 def main():
-    updater = Updater(token=Config.TELEGRAM_TOKEN)
-
+    updater = Updater(token=CONFIG.TELEGRAM_TOKEN)
     dispatcher = updater.dispatcher
     dassetxPriceProvider = DassetxPriceProvider(job_queue=updater.job_queue)
 
     price_handler = DassetxPriceAlertHandler(
-        dassetxPriceProvider=dassetxPriceProvider
+        dassetxPriceProvider=dassetxPriceProvider, bot=updater.bot
     )
 
+    dassetxPriceProvider.subscribe(price_handler.on_price_update)
+
     dispatcher.add_handler(
-        price_handler.build_handler('start')
+        price_handler.build_telegram_bot_handler('start')
     )  # Accessed via /start
     dispatcher.add_handler(
-        price_handler.build_handler('alert')
+        price_handler.build_telegram_bot_handler('alert')
     )  # Accessed via /alert
 
-    dassetxPriceProvider.start()
-    price_handler.start()
+    price_handler.start()  # let the provider start polling prices
 
     updater.start_polling()  # Start the bot
     updater.idle()
 
 
 if __name__ == '__main__':
-    Config.check()
+    CONFIG.check()
     main()
