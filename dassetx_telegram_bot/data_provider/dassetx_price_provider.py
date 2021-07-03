@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 import requests
+from requests import ReadTimeout
 from rx.subject import Subject
 from telegram.ext import JobQueue
 
@@ -73,8 +74,8 @@ class DassetxPriceProvider(DataProviderABC):
                 timeout=2.0,
             )
             new_tickers = r.json()
-        except Exception as e:
-            logger.exception(e)
+        except ReadTimeout as e:
+            logger.warning("dassetx price polling timeout!")
         else:
             # [
             #     {
