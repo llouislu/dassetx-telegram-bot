@@ -75,7 +75,7 @@ class DassetxPriceAlertHandler:
             parse_mode=self.PARSE_MODE,
         )
 
-    def _make_symbol(self, crypto: str, to="NZD"):
+    def _make_symbol(self, crypto: str, to=CONFIG.DEFAULT_CURRENCY):
         return f"{crypto}-{to}"
 
     def _monitor_price(self, context):

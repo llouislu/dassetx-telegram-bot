@@ -1,10 +1,11 @@
 import os
 
 
-class Config:
+class CONFIG:
     DASSETX_ACCOUNT_ID = os.environ.get('DASSETX_ACCOUNT_ID')
     DASSETX_API_SECRET = os.environ.get('DASSETX_API_SECRET')
     TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
+    DEFAULT_CURRENCY = "USDT"
 
     @classmethod
     def check(cls):
