@@ -1,0 +1,8 @@
+version: "3"
+services:
+  dx-tg-bot:
+    container_name: "dx-tg-bot"
+    build: "."
+    command: "tail -f /dev/null"
+    env_file:
+      - .env

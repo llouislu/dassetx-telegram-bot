@@ -141,7 +141,6 @@ class DassetxPriceAlertHandler:
             if crypto in dassetx_price_dict.keys():
                 dassetx_price = dassetx_price_dict[crypto]
                 for rule in rules:
-                    print(crypto, rule.sign, rule.price)
                     needs_sending = False
                     if rule.sign == "<":
                         if dassetx_price.lastTradeRate < rule.price:
