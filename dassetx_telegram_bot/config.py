@@ -6,7 +6,7 @@ class CONFIG:
     DASSETX_ACCOUNT_ID = os.environ.get('DASSETX_ACCOUNT_ID')
     DASSETX_API_SECRET = os.environ.get('DASSETX_API_SECRET')
     TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-    DEFAULT_CURRENCY = "USDT"
+    DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "USDT")
     SQLITE_PATH = os.environ.get("SQLITE_PATH")
 
     @classmethod
